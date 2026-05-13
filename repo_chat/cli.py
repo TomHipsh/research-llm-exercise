@@ -5,8 +5,38 @@ import typer
 
 app = typer.Typer(
     help="Ask questions about a local Git repository.",
-    no_args_is_help=True,
+    no_args_is_help=False,
 )
+
+
+def _prompt_for_repository_path() -> Path:
+    while True:
+        raw_path = typer.prompt("Enter the local git repository path")
+        repo_path = Path(raw_path).expanduser().resolve()
+
+        if not repo_path.exists() or not repo_path.is_dir():
+            typer.echo("That path does not exist or is not a directory.")
+            continue
+
+        if not (repo_path / ".git").exists():
+            typer.echo("That directory does not look like a git repository.")
+            continue
+
+        return repo_path
+
+
+@app.callback(invoke_without_command=True)
+def start(ctx: typer.Context) -> None:
+    """Start the interactive repository chat flow."""
+    if ctx.invoked_subcommand is not None:
+        return
+
+    typer.echo("Welcome to Repo Chat.")
+    typer.echo("Let's start by choosing a local git repository to inspect.")
+
+    repo_path = _prompt_for_repository_path()
+    typer.echo(f"Repository selected: {repo_path}")
+    typer.echo("Indexing...")
 
 
 @app.command()
