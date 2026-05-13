@@ -1,0 +1,2 @@
+"""Repository research chatbot CLI."""
+
