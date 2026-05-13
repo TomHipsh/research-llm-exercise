@@ -25,6 +25,17 @@ def _prompt_for_repository_path() -> Path:
         return repo_path
 
 
+def _prompt_yes_no(message: str) -> bool:
+    while True:
+        answer = typer.prompt(message).strip().lower()
+        if answer == "y":
+            return True
+        if answer == "n":
+            return False
+
+        typer.echo("Please enter 'y' for yes or 'n' for no.")
+
+
 def _index_repository(repo_path: Path) -> None:
     from repo_chat.indexer.indexing import index_repository
 
@@ -32,16 +43,44 @@ def _index_repository(repo_path: Path) -> None:
     result = index_repository(repo_path)
 
     if result.skipped_existing_index:
-        typer.echo(
-            f"Using existing Chroma collection '{result.collection_name}' "
-            f"with {result.chunks_seen} chunks."
+        should_reindex = _prompt_yes_no(
+            f"Existing index found for '{result.collection_name}' "
+            f"with {result.chunks_seen} chunks. Re-index? [y/n]"
         )
-        return
+        if not should_reindex:
+            typer.echo(f"Using existing Chroma collection '{result.collection_name}'.")
+            return
+
+        typer.echo("Deleting existing index and re-indexing...")
+        result = index_repository(repo_path, reindex=True)
 
     typer.echo(
         f"Indexed {result.chunks_indexed} chunks from {result.files_seen} files "
         f"into Chroma collection '{result.collection_name}'."
     )
+
+
+@app.command("delete-index")
+def delete_index(
+    repo_path: Path = typer.Argument(
+        ...,
+        exists=True,
+        file_okay=False,
+        dir_okay=True,
+        readable=True,
+        resolve_path=True,
+        help="Path to the local repository whose index should be deleted.",
+    ),
+) -> None:
+    """Delete an existing local vector index for a repository."""
+    from repo_chat.indexer.indexing import delete_repository_index
+
+    result = delete_repository_index(repo_path)
+    if not result.deleted:
+        typer.echo(f"No Chroma collection found for '{result.collection_name}'.")
+        return
+
+    typer.echo(f"Deleted Chroma collection '{result.collection_name}'.")
 
 
 @app.callback(invoke_without_command=True)

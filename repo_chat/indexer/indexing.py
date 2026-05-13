@@ -1,22 +1,37 @@
 import hashlib
 import re
 from pathlib import Path
+from typing import Optional
 
 from api.azure_openai_client.azure_openai_client import AzureOpenAIClient
-from api.azure_openai_client.instance import azure_openai_client
 from api.chroma_client.chroma_client import ChromaClient
-from api.chroma_client.instance import chroma_client
 from repo_chat.chunks.chunking import chunk_file
 from repo_chat.indexer.repository_utils import iter_repository_files
 from repo_chat.indexer.structures import IndexingResult
+from repo_chat.indexer.structures import DeleteIndexResult
 
 
 def index_repository(
     repo_path: Path,
-    openai_client: AzureOpenAIClient = azure_openai_client,
-    vector_client: ChromaClient = chroma_client,
+    openai_client: Optional[AzureOpenAIClient] = None,
+    vector_client: Optional[ChromaClient] = None,
+    reindex: bool = False,
 ) -> IndexingResult:
+    if openai_client is None:
+        from api.azure_openai_client.instance import azure_openai_client
+
+        openai_client = azure_openai_client
+
+    if vector_client is None:
+        from api.chroma_client.instance import chroma_client
+
+        vector_client = chroma_client
+
     collection_name = _collection_name_for_repo(repo_path)
+
+    if reindex:
+        vector_client.delete_repository_collection(collection_name)
+
     collection = vector_client.get_or_create_repository_collection(
         collection_name=collection_name,
         repo_path=repo_path,
@@ -58,6 +73,20 @@ def index_repository(
         chunks_indexed=chunks_indexed,
         skipped_existing_index=False,
     )
+
+
+def delete_repository_index(
+    repo_path: Path,
+    vector_client: Optional[ChromaClient] = None,
+) -> DeleteIndexResult:
+    if vector_client is None:
+        from api.chroma_client.instance import chroma_client
+
+        vector_client = chroma_client
+
+    collection_name = _collection_name_for_repo(repo_path)
+    deleted = vector_client.delete_repository_collection(collection_name)
+    return DeleteIndexResult(collection_name=collection_name, deleted=deleted)
 
 
 def _collection_name_for_repo(repo_path: Path) -> str:

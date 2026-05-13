@@ -1,6 +1,8 @@
 from pathlib import Path
+from typing import Optional
 
 import chromadb
+from chromadb.errors import NotFoundError
 from chromadb.api.models.Collection import Collection
 
 
@@ -25,3 +27,19 @@ class ChromaClient:
                 "repository_path": str(repo_path),
             },
         )
+
+    def get_repository_collection(self, collection_name: str) -> Optional[Collection]:
+        try:
+            return self.client.get_collection(
+                name=collection_name,
+                embedding_function=None,
+            )
+        except NotFoundError:
+            return None
+
+    def delete_repository_collection(self, collection_name: str) -> bool:
+        if self.get_repository_collection(collection_name) is None:
+            return False
+
+        self.client.delete_collection(name=collection_name)
+        return True
