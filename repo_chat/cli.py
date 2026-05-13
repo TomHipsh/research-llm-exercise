@@ -38,7 +38,7 @@ def _prompt_yes_no(message: str) -> bool:
 
 def _prompt_for_question() -> str:
     while True:
-        question = typer.prompt("Ask a question about this repository").strip()
+        question = typer.prompt("Ask a question about this repository, or type 'exit'").strip()
         if question:
             return question
 
@@ -79,6 +79,17 @@ def _resolve_question(repo_path: Path, question: str) -> None:
     typer.echo(result.answer)
 
 
+def _questions_loop(repo_path: Path) -> None:
+    while True:
+        question = _prompt_for_question()
+        if question.lower() == "exit":
+            typer.echo("Goodbye.")
+            return
+
+        _resolve_question(repo_path, question)
+        typer.echo("")
+
+
 @app.command("delete-index")
 def delete_index(
     repo_path: Path = typer.Argument(
@@ -114,8 +125,7 @@ def start(ctx: typer.Context) -> None:
     repo_path = _prompt_for_repository_path()
     typer.echo(f"Repository selected: {repo_path}")
     _index_repository(repo_path)
-    question = _prompt_for_question()
-    _resolve_question(repo_path, question)
+    _questions_loop(repo_path)
 
 
 def main() -> None:
