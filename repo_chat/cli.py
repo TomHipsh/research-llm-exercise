@@ -25,6 +25,25 @@ def _prompt_for_repository_path() -> Path:
         return repo_path
 
 
+def _index_repository(repo_path: Path) -> None:
+    from repo_chat.indexer.indexing import index_repository
+
+    typer.echo("Indexing...")
+    result = index_repository(repo_path)
+
+    if result.skipped_existing_index:
+        typer.echo(
+            f"Using existing Chroma collection '{result.collection_name}' "
+            f"with {result.chunks_seen} chunks."
+        )
+        return
+
+    typer.echo(
+        f"Indexed {result.chunks_indexed} chunks from {result.files_seen} files "
+        f"into Chroma collection '{result.collection_name}'."
+    )
+
+
 @app.callback(invoke_without_command=True)
 def start(ctx: typer.Context) -> None:
     """Start the interactive repository chat flow."""
@@ -36,7 +55,7 @@ def start(ctx: typer.Context) -> None:
 
     repo_path = _prompt_for_repository_path()
     typer.echo(f"Repository selected: {repo_path}")
-    typer.echo("Indexing...")
+    _index_repository(repo_path)
 
 
 @app.command()
@@ -55,7 +74,8 @@ def ask(
     """Ask a question about a local repository."""
     typer.echo(f"Repository: {repo_path}")
     typer.echo(f"Question: {question}")
-    typer.echo("Indexing and retrieval will be implemented next.")
+    _index_repository(repo_path)
+    typer.echo("Retrieval and answer generation will be implemented next.")
 
 
 def main() -> None:

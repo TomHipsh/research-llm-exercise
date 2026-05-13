@@ -20,12 +20,12 @@ class AzureOpenAIClient:
         )
 
         self.client = AzureOpenAI(
-            api_version=os.getenv("AZURE_OPENAI_API_VERSION"),
+            api_version=_required_env("AZURE_OPENAI_API_VERSION"),
             azure_ad_token_provider=token_provider,
-            azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"),
+            azure_endpoint=_required_env("AZURE_OPENAI_ENDPOINT"),
         )
-        self.gpt_model = os.getenv("AZURE_OPENAI_MODEL_GPT4o")
-        self.embedding_model = os.getenv("AZURE_OPENAI_MODEL_ADA2")
+        self.gpt_model = _required_env("AZURE_OPENAI_MODEL_GPT4o")
+        self.embedding_model = _required_env("AZURE_OPENAI_MODEL_ADA2")
 
     def create_chat_completion(
         self,
@@ -41,3 +41,11 @@ class AzureOpenAIClient:
             model=self.embedding_model,
             input=text,
         )
+
+
+def _required_env(name: str) -> str:
+    value = os.getenv(name)
+    if not value:
+        raise RuntimeError(f"Missing required environment variable: {name}")
+
+    return value

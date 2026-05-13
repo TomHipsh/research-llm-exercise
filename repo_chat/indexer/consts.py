@@ -1,0 +1,25 @@
+BINARY_SUFFIXES = {
+    ".7z",
+    ".bmp",
+    ".dll",
+    ".doc",
+    ".docx",
+    ".exe",
+    ".gif",
+    ".ico",
+    ".jar",
+    ".jpeg",
+    ".jpg",
+    ".lock",
+    ".mp3",
+    ".mp4",
+    ".pdf",
+    ".png",
+    ".pyc",
+    ".pyo",
+    ".so",
+    ".sqlite",
+    ".zip",
+}
+
+SKIPPED_DIRECTORIES = {".git", "vector_store"}

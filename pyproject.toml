@@ -9,12 +9,13 @@ dependencies = [
     "chromadb>=1.3.5,<2.0.0",
     "gitignore-parser>=0.1.13,<0.2.0",
     "openai>=2.8.1,<3.0.0",
+    "pydantic>=2.13.4,<3.0.0",
     "python-dotenv>=1.2.1,<2.0.0",
     "typer>=0.20.0,<0.21.0",
 ]
 
 [project.scripts]
-repo-chat = "repo_chat.cli:main"
+chat = "repo_chat.cli:main"
 
 [tool.poetry]
 packages = [
