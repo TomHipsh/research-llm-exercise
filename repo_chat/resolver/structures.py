@@ -21,4 +21,4 @@ class ResolveResult(BaseModel):
 
     question: str
     chunks: List[RelevantChunk]
-
+    answer: str

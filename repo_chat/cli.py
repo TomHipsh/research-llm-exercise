@@ -72,19 +72,11 @@ def _index_repository(repo_path: Path) -> None:
 def _resolve_question(repo_path: Path, question: str) -> None:
     from repo_chat.resolver.resolver import resolve_question
 
-    typer.echo("Searching relevant chunks...")
+    typer.echo("Searching and generating an answer...")
     result = resolve_question(repo_path=repo_path, question=question)
 
-    if not result.chunks:
-        typer.echo("No relevant chunks found.")
-        return
-
-    typer.echo("Relevant chunks:")
-    for index, chunk in enumerate(result.chunks, start=1):
-        typer.echo(
-            f"{index}. {chunk.file}:{chunk.start_line}-{chunk.end_line} "
-            f"({chunk.language.value}, distance={chunk.distance:.4f})"
-        )
+    typer.echo("")
+    typer.echo(result.answer)
 
 
 @app.command("delete-index")
