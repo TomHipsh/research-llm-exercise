@@ -1,9 +1,10 @@
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Sequence
 
 import chromadb
-from chromadb.errors import NotFoundError
 from chromadb.api.models.Collection import Collection
+from chromadb.api.types import QueryResult
+from chromadb.errors import NotFoundError
 
 
 class ChromaClient:
@@ -43,3 +44,19 @@ class ChromaClient:
 
         self.client.delete_collection(name=collection_name)
         return True
+
+    def query_repository_collection(
+        self,
+        collection_name: str,
+        query_embedding: Sequence[float],
+        n_results: int,
+    ) -> Optional[QueryResult]:
+        collection = self.get_repository_collection(collection_name)
+        if collection is None:
+            return None
+
+        return collection.query(
+            query_embeddings=[query_embedding],
+            n_results=n_results,
+            include=["documents", "metadatas", "distances"],
+        )

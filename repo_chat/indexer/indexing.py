@@ -27,7 +27,7 @@ def index_repository(
 
         vector_client = chroma_client
 
-    collection_name = _collection_name_for_repo(repo_path)
+    collection_name = collection_name_for_repo(repo_path)
 
     if reindex:
         vector_client.delete_repository_collection(collection_name)
@@ -84,12 +84,12 @@ def delete_repository_index(
 
         vector_client = chroma_client
 
-    collection_name = _collection_name_for_repo(repo_path)
+    collection_name = collection_name_for_repo(repo_path)
     deleted = vector_client.delete_repository_collection(collection_name)
     return DeleteIndexResult(collection_name=collection_name, deleted=deleted)
 
 
-def _collection_name_for_repo(repo_path: Path) -> str:
+def collection_name_for_repo(repo_path: Path) -> str:
     normalized = re.sub(r"[^a-zA-Z0-9_-]+", "-", repo_path.name).strip("-_").lower()
     if len(normalized) >= 3:
         return normalized

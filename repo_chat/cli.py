@@ -36,6 +36,15 @@ def _prompt_yes_no(message: str) -> bool:
         typer.echo("Please enter 'y' for yes or 'n' for no.")
 
 
+def _prompt_for_question() -> str:
+    while True:
+        question = typer.prompt("Ask a question about this repository").strip()
+        if question:
+            return question
+
+        typer.echo("Please enter a non-empty question.")
+
+
 def _index_repository(repo_path: Path) -> None:
     from repo_chat.indexer.indexing import index_repository
 
@@ -58,6 +67,24 @@ def _index_repository(repo_path: Path) -> None:
         f"Indexed {result.chunks_indexed} chunks from {result.files_seen} files "
         f"into Chroma collection '{result.collection_name}'."
     )
+
+
+def _resolve_question(repo_path: Path, question: str) -> None:
+    from repo_chat.resolver.resolver import resolve_question
+
+    typer.echo("Searching relevant chunks...")
+    result = resolve_question(repo_path=repo_path, question=question)
+
+    if not result.chunks:
+        typer.echo("No relevant chunks found.")
+        return
+
+    typer.echo("Relevant chunks:")
+    for index, chunk in enumerate(result.chunks, start=1):
+        typer.echo(
+            f"{index}. {chunk.file}:{chunk.start_line}-{chunk.end_line} "
+            f"({chunk.language.value}, distance={chunk.distance:.4f})"
+        )
 
 
 @app.command("delete-index")
@@ -95,26 +122,8 @@ def start(ctx: typer.Context) -> None:
     repo_path = _prompt_for_repository_path()
     typer.echo(f"Repository selected: {repo_path}")
     _index_repository(repo_path)
-
-
-@app.command()
-def ask(
-    repo_path: Path = typer.Argument(
-        ...,
-        exists=True,
-        file_okay=False,
-        dir_okay=True,
-        readable=True,
-        resolve_path=True,
-        help="Path to the local repository to inspect.",
-    ),
-    question: str = typer.Argument(..., help="Question to ask about the codebase."),
-) -> None:
-    """Ask a question about a local repository."""
-    typer.echo(f"Repository: {repo_path}")
-    typer.echo(f"Question: {question}")
-    _index_repository(repo_path)
-    typer.echo("Retrieval and answer generation will be implemented next.")
+    question = _prompt_for_question()
+    _resolve_question(repo_path, question)
 
 
 def main() -> None:
